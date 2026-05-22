@@ -566,18 +566,20 @@ body.is-dragging .spark {
   padding: 0;
   border: 8px solid rgba(255, 255, 255, 0.96);
   border-radius: 50%;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.92), transparent 24%),
+    linear-gradient(145deg, #ffffff 0%, #f3fffd 52%, #e2fbf7 100%);
   box-shadow:
     0 12px 30px rgba(29, 42, 54, 0.18),
-    inset 0 0 0 1px rgba(81, 194, 189, 0.16);
+    inset 0 0 0 1px rgba(81, 194, 189, 0.16),
+    inset 0 -10px 18px rgba(18, 115, 122, 0.08);
   overflow: hidden;
 }
 
 .wheel-center img {
-  width: 76%;
+  width: 86%;
   height: auto;
   display: block;
-  transform: translateY(-2%);
 }
 
 .tap-chip {
