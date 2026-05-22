@@ -518,7 +518,9 @@ function startPlayfulWheelDrag(event) {
 
   playfulDrag = {
     pointerId: event.pointerId,
-    lastAngle: getWheelPointerAngle(event),
+    lastAngle: getWheelPointerData(event).angle,
+    lastX: event.clientX,
+    lastY: event.clientY,
     lastTime: performance.now(),
     moved: false,
     velocity: 0
@@ -533,17 +535,22 @@ function movePlayfulWheelDrag(event) {
     return;
   }
 
-  const angle = getWheelPointerAngle(event);
+  const pointer = getWheelPointerData(event);
   const now = performance.now();
-  const delta = getShortestAngleDelta(playfulDrag.lastAngle, angle);
+  const movementX = event.clientX - playfulDrag.lastX;
+  const movementY = event.clientY - playfulDrag.lastY;
+  const angleDelta = getShortestAngleDelta(playfulDrag.lastAngle, pointer.angle);
+  const delta = getPlayfulRotationDelta(pointer, movementX, movementY, angleDelta);
   const elapsed = Math.max(now - playfulDrag.lastTime, 16);
 
-  if (Math.abs(delta) > 0.35) {
+  if (Math.abs(movementX) + Math.abs(movementY) > 3) {
     playfulDrag.moved = true;
   }
 
   playfulDrag.velocity = (delta / elapsed) * 16.67;
-  playfulDrag.lastAngle = angle;
+  playfulDrag.lastAngle = pointer.angle;
+  playfulDrag.lastX = event.clientX;
+  playfulDrag.lastY = event.clientY;
   playfulDrag.lastTime = now;
   rotation += delta;
   renderPlayfulRotation();
@@ -579,15 +586,44 @@ function cancelPlayfulWheelDrag(event) {
   }
 }
 
-function getWheelPointerAngle(event) {
+function getWheelPointerData(event) {
   const rect = spinButton.getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
-  return (Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180) / Math.PI;
+  const angle = (Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180) / Math.PI;
+
+  return {
+    angle,
+    centerX,
+    centerY,
+    radius: rect.width / 2,
+    x: event.clientX,
+    y: event.clientY,
+    distanceFromCenter: Math.hypot(event.clientX - centerX, event.clientY - centerY)
+  };
 }
 
 function getShortestAngleDelta(from, to) {
   return ((to - from + 540) % 360) - 180;
+}
+
+function getPlayfulRotationDelta(pointer, movementX, movementY, angleDelta) {
+  const angleRadians = (pointer.angle * Math.PI) / 180;
+  const movementDistance = Math.hypot(movementX, movementY);
+  const tangentialPixels = -Math.sin(angleRadians) * movementX + Math.cos(angleRadians) * movementY;
+  const tangentialDegrees = (tangentialPixels / Math.max(pointer.radius, 1)) * (180 / Math.PI) * 7.4;
+  const horizontalDirection = pointer.y <= pointer.centerY ? 1 : -1;
+  const verticalDirection = pointer.x >= pointer.centerX ? 1 : -1;
+  const swipePixels = movementX * horizontalDirection + movementY * verticalDirection;
+  const swipeDegrees = swipePixels * 3.05;
+  const fallbackSign = Math.sign(swipePixels) || Math.sign(tangentialPixels) || Math.sign(angleDelta) || 1;
+  const fallbackDegrees = movementDistance * fallbackSign * 2.45;
+  const dominantGesture = [tangentialDegrees, swipeDegrees, fallbackDegrees].reduce((best, value) => (
+    Math.abs(value) > Math.abs(best) ? value : best
+  ), 0);
+  const centerFreedom = clamp(pointer.distanceFromCenter / (pointer.radius * 0.22), 0.55, 1);
+
+  return (dominantGesture + angleDelta * 0.18) * centerFreedom;
 }
 
 function renderPlayfulRotation() {
@@ -596,17 +632,21 @@ function renderPlayfulRotation() {
 }
 
 function coastPlayfulWheel(initialVelocity) {
-  let velocity = clamp(initialVelocity, -22, 22);
+  let velocity = clamp(initialVelocity * 2.4, -140, 140);
+
+  if (Math.abs(velocity) > 0 && Math.abs(velocity) < 10) {
+    velocity = Math.sign(velocity) * 10;
+  }
 
   function tick() {
-    if (spinning || Math.abs(velocity) < 0.08) {
+    if (spinning || Math.abs(velocity) < 0.035) {
       canvas.style.transition = "";
       return;
     }
 
     rotation += velocity;
     renderPlayfulRotation();
-    velocity *= 0.94;
+    velocity *= 0.985;
     playfulCoastFrame = window.requestAnimationFrame(tick);
   }
 
