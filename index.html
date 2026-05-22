@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#51c2bd">
+    <title>Roleta Práctica | EXPOSUL 2026</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true">
+      <span class="bubble bubble-one"></span>
+      <span class="bubble bubble-two"></span>
+      <span class="bubble bubble-three"></span>
+      <span class="ribbon ribbon-one"></span>
+      <span class="ribbon ribbon-two"></span>
+    </div>
+
+    <main class="app-shell">
+      <header class="brand-strip">
+        <img class="brand" src="assets/logo-practica-transparent.png" alt="Práctica">
+        <div class="event-pill">
+          <span>EXPOSUL 2026</span>
+          <strong>Chapadão do Sul</strong>
+        </div>
+      </header>
+
+      <section class="screen wheel-screen is-active" id="wheelScreen" aria-labelledby="wheelTitle">
+        <div class="step-copy">
+          <p class="kicker">Jantar Práctica</p>
+          <h1 id="wheelTitle">Roleta de prêmios</h1>
+          <p id="playerName">Toque para participar e descobrir seu presente.</p>
+        </div>
+
+        <div class="wheel-zone" aria-label="Roleta de prêmios">
+          <div class="wheel-frame">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas id="wheelCanvas" width="720" height="720"></canvas>
+            <div class="wheel-center" aria-hidden="true">
+              <img src="assets/logo-practica-transparent.png" alt="">
+            </div>
+          </div>
+        </div>
+
+        <button class="primary-button spin-button" id="spinButton" type="button">Girar roleta</button>
+        <p class="microcopy claim-hint" id="claimHint">Uma chance por celular.</p>
+      </section>
+
+      <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
+        <div class="result-badge" aria-hidden="true">★</div>
+        <p class="kicker">Parabéns, <span id="resultName">participante</span></p>
+        <h2 id="resultTitle">Você ganhou</h2>
+
+        <div class="winner" aria-live="polite">
+          <span>Seu prêmio</span>
+          <strong id="winnerText">Aguardando giro</strong>
+        </div>
+
+        <form class="claim-form" id="claimForm">
+          <button class="whatsapp-button" id="whatsappButton" type="submit">Enviar pelo WhatsApp</button>
+        </form>
+
+        <p class="microcopy">Mostre a mensagem para a equipe conferir seu nome na lista do jantar.</p>
+      </section>
+    </main>
+
+    <div class="name-sheet" id="nameSheet" aria-hidden="true" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+        <button class="sheet-close" id="closeNameSheet" type="button" aria-label="Fechar">×</button>
+        <p class="kicker">Antes de girar</p>
+        <h2 id="nameTitle">Qual é seu nome?</h2>
+        <form class="entry-form" id="nameForm">
+          <label for="guestName">Nome completo</label>
+          <input id="guestName" name="guestName" type="text" autocomplete="name" placeholder="Seu nome" required>
+          <button class="primary-button" id="startButton" type="submit">Começar o giro</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
