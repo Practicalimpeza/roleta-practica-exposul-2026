@@ -32,17 +32,21 @@ const resultNote = document.querySelector("#resultNote");
 const winnerText = document.querySelector("#winnerText");
 const winnerBox = document.querySelector(".winner");
 const confettiLayer = document.querySelector("#confettiLayer");
+const root = document.documentElement;
 
 const backendUrl = window.PRACTICA_BACKEND_URL || "";
 const whatsappNumber = "556784132037";
 const resultStorageKey = "practica-roleta-exposul-2026-result";
 const confettiColors = ["#51c2bd", "#f8c84b", "#ff755f", "#9bd84b", "#489de2", "#27323f"];
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 let rotation = 0;
 let spinning = false;
 let currentPrize = "";
 let currentParticipantName = "";
 let currentCode = "";
+let ambientDragStart = null;
+let ambientDragResetTimer = 0;
 
 function drawWheel() {
   const size = canvas.width;
@@ -447,6 +451,77 @@ function setClaimHint(message, tone = "") {
   claimHint.classList.toggle("is-success", tone === "success");
 }
 
+function handleAmbientPointerDown(event) {
+  if (reducedMotionQuery.matches || nameSheet.classList.contains("is-open")) {
+    return;
+  }
+
+  if (event.target instanceof Element && event.target.closest("input, textarea, select, .sheet-card")) {
+    return;
+  }
+
+  ambientDragStart = {
+    x: event.clientX,
+    y: event.clientY
+  };
+  window.clearTimeout(ambientDragResetTimer);
+  document.body.classList.add("is-dragging");
+}
+
+function handleAmbientPointerMove(event) {
+  if (!ambientDragStart || reducedMotionQuery.matches) {
+    return;
+  }
+
+  setAmbientDrag(event.clientX - ambientDragStart.x, event.clientY - ambientDragStart.y);
+}
+
+function handleAmbientPointerEnd() {
+  if (!ambientDragStart) {
+    return;
+  }
+
+  ambientDragStart = null;
+  document.body.classList.remove("is-dragging");
+  window.clearTimeout(ambientDragResetTimer);
+  ambientDragResetTimer = window.setTimeout(() => setAmbientDrag(0, 0), 120);
+}
+
+function setAmbientDrag(deltaX, deltaY) {
+  const x = clamp(deltaX, -72, 72);
+  const y = clamp(deltaY, -44, 44);
+  const intensity = Math.min(Math.hypot(x, y) / 84, 1);
+  const softX = x * 0.16;
+  const softY = y * 0.12;
+  const mediumX = x * 0.3;
+  const mediumY = y * 0.22;
+  const strongX = x * 0.48;
+  const strongY = y * 0.34;
+
+  setPixelVar("--drag-soft-x", softX);
+  setPixelVar("--drag-soft-y", softY);
+  setPixelVar("--drag-soft-neg-x", -softX);
+  setPixelVar("--drag-soft-neg-y", -softY);
+  setPixelVar("--drag-medium-x", mediumX);
+  setPixelVar("--drag-medium-y", mediumY);
+  setPixelVar("--drag-medium-neg-x", -mediumX);
+  setPixelVar("--drag-medium-neg-y", -mediumY);
+  setPixelVar("--drag-strong-x", strongX);
+  setPixelVar("--drag-strong-y", strongY);
+  setPixelVar("--drag-strong-neg-x", -strongX);
+  setPixelVar("--drag-strong-neg-y", -strongY);
+  root.style.setProperty("--drag-tilt", `${(x * 0.08).toFixed(2)}deg`);
+  root.style.setProperty("--drag-scale", (1 + intensity * 0.018).toFixed(3));
+}
+
+function setPixelVar(name, value) {
+  root.style.setProperty(name, `${value.toFixed(2)}px`);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function launchConfetti(pieces = 120) {
   confettiLayer.innerHTML = "";
 
@@ -483,3 +558,8 @@ nameSheet.addEventListener("click", (event) => {
     closeNameSheetPanel();
   }
 });
+document.addEventListener("pointerdown", handleAmbientPointerDown);
+document.addEventListener("pointermove", handleAmbientPointerMove);
+document.addEventListener("pointerup", handleAmbientPointerEnd);
+document.addEventListener("pointercancel", handleAmbientPointerEnd);
+window.addEventListener("blur", handleAmbientPointerEnd);

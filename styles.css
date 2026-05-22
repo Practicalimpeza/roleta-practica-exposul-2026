@@ -13,6 +13,20 @@
   --navy: #27323f;
   --shadow: 0 24px 60px rgba(18, 115, 122, 0.18);
   --soft-shadow: 0 16px 42px rgba(29, 42, 54, 0.12);
+  --drag-soft-x: 0px;
+  --drag-soft-y: 0px;
+  --drag-soft-neg-x: 0px;
+  --drag-soft-neg-y: 0px;
+  --drag-medium-x: 0px;
+  --drag-medium-y: 0px;
+  --drag-medium-neg-x: 0px;
+  --drag-medium-neg-y: 0px;
+  --drag-strong-x: 0px;
+  --drag-strong-y: 0px;
+  --drag-strong-neg-x: 0px;
+  --drag-strong-neg-y: 0px;
+  --drag-tilt: 0deg;
+  --drag-scale: 1;
 }
 
 * {
@@ -36,6 +50,10 @@ body {
   overflow-x: hidden;
 }
 
+body.is-dragging {
+  cursor: grabbing;
+}
+
 button,
 input {
   font: inherit;
@@ -53,11 +71,13 @@ button {
 }
 
 .wash,
-.ribbon,
+.party-dot,
 .spark {
   position: absolute;
   display: block;
   opacity: 0.72;
+  transition: translate 180ms ease-out, opacity 180ms ease-out;
+  will-change: transform, translate;
 }
 
 .wash {
@@ -83,38 +103,6 @@ button {
   animation-delay: -4s;
 }
 
-.ribbon {
-  width: 58px;
-  height: 16px;
-  border-radius: 4px;
-  background: var(--blue);
-  transform: rotate(-25deg);
-  animation: wiggle 5s ease-in-out infinite;
-}
-
-.ribbon-one {
-  top: 44%;
-  left: -28px;
-}
-
-.ribbon-two {
-  right: -18px;
-  bottom: 24%;
-  background: var(--lime);
-  transform: rotate(18deg);
-  animation-delay: -2.8s;
-}
-
-.ribbon-three {
-  width: 44px;
-  height: 11px;
-  top: 62%;
-  right: -24px;
-  background: var(--coral);
-  transform: rotate(-12deg);
-  animation-delay: -1.6s;
-}
-
 .spark {
   width: 12px;
   height: 12px;
@@ -126,6 +114,7 @@ button {
 .spark-one {
   top: 18%;
   right: 27%;
+  translate: var(--drag-soft-neg-x) var(--drag-soft-neg-y);
 }
 
 .spark-two {
@@ -133,6 +122,7 @@ button {
   bottom: 28%;
   background: var(--coral);
   animation-delay: -1.2s;
+  translate: var(--drag-medium-x) var(--drag-soft-y);
 }
 
 .spark-three {
@@ -140,6 +130,7 @@ button {
   bottom: 38%;
   background: var(--blue);
   animation-delay: -2s;
+  translate: var(--drag-medium-neg-x) var(--drag-medium-y);
 }
 
 .spark-four {
@@ -149,6 +140,52 @@ button {
   height: 9px;
   background: var(--lime);
   animation-delay: -0.6s;
+  translate: var(--drag-soft-x) var(--drag-soft-neg-y);
+}
+
+.party-dot {
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 12px 26px rgba(29, 42, 54, 0.09);
+  animation: bob 5.6s ease-in-out infinite;
+}
+
+.party-dot-one {
+  width: 22px;
+  height: 22px;
+  left: 4%;
+  top: 39%;
+  background: var(--sun);
+  translate: var(--drag-strong-x) var(--drag-soft-y);
+}
+
+.party-dot-two {
+  width: 14px;
+  height: 14px;
+  right: 12%;
+  top: 30%;
+  background: var(--blue);
+  animation-delay: -1.4s;
+  translate: var(--drag-medium-neg-x) var(--drag-soft-y);
+}
+
+.party-dot-three {
+  width: 30px;
+  height: 30px;
+  right: 5%;
+  bottom: 16%;
+  background: var(--coral);
+  animation-delay: -2.2s;
+  translate: var(--drag-strong-neg-x) var(--drag-soft-neg-y);
+}
+
+.party-dot-four {
+  width: 16px;
+  height: 16px;
+  left: 12%;
+  bottom: 19%;
+  background: var(--lime);
+  animation-delay: -3.1s;
+  translate: var(--drag-strong-x) var(--drag-medium-neg-y);
 }
 
 .app-shell {
@@ -164,6 +201,8 @@ button {
 }
 
 .brand-strip {
+  width: 100%;
+  place-self: start center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,6 +216,7 @@ button {
   width: 132px;
   height: auto;
   display: block;
+  margin-inline: auto;
   filter: drop-shadow(0 9px 18px rgba(18, 115, 122, 0.1));
 }
 
@@ -380,6 +420,8 @@ h2 {
   place-items: center;
   padding: 2px 0 8px;
   width: 100%;
+  translate: var(--drag-soft-x) var(--drag-soft-y);
+  transition: translate 180ms ease-out;
 }
 
 .wheel-frame {
@@ -396,7 +438,22 @@ h2 {
   box-shadow:
     0 28px 64px rgba(18, 115, 122, 0.2),
     inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+  rotate: var(--drag-tilt);
+  scale: var(--drag-scale);
   animation: wheelFloat 3.8s ease-in-out infinite;
+  transition: rotate 180ms ease-out, scale 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+body.is-dragging .wheel-frame {
+  box-shadow:
+    0 34px 74px rgba(18, 115, 122, 0.25),
+    0 0 0 9px rgba(248, 200, 75, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+body.is-dragging .party-dot,
+body.is-dragging .spark {
+  opacity: 0.95;
 }
 
 .wheel-aura {
@@ -513,11 +570,58 @@ h2 {
   box-shadow:
     0 12px 30px rgba(29, 42, 54, 0.18),
     inset 0 0 0 1px rgba(81, 194, 189, 0.16);
+  overflow: hidden;
 }
 
-.wheel-center img {
-  width: 100%;
-  height: auto;
+.center-mark {
+  position: relative;
+  width: 64%;
+  height: 58%;
+  display: block;
+}
+
+.center-bowl {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0;
+  height: 70%;
+  border-radius: 8px 8px 999px 999px;
+  background: linear-gradient(180deg, #66d0ca, var(--brand));
+  clip-path: polygon(0 12%, 26% 31%, 52% 36%, 77% 28%, 100% 6%, 94% 54%, 80% 82%, 58% 100%, 34% 96%, 15% 76%, 4% 44%);
+}
+
+.center-bowl::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  top: 6%;
+  width: 52%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(18, 115, 122, 0.32);
+  transform: rotate(6deg);
+}
+
+.center-bubble {
+  position: absolute;
+  z-index: 1;
+  border-radius: 999px;
+  background: #66d0ca;
+}
+
+.center-bubble-one {
+  top: 0;
+  left: 60%;
+  width: 18%;
+  aspect-ratio: 1;
+}
+
+.center-bubble-two {
+  top: 19%;
+  left: 42%;
+  width: 11%;
+  aspect-ratio: 1;
 }
 
 .tap-chip {
@@ -723,10 +827,20 @@ h2 {
 .confetti {
   position: absolute;
   top: -20px;
-  width: 9px;
-  height: 18px;
-  border-radius: 3px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
   animation: confettiFall var(--duration) linear forwards;
+}
+
+.confetti:nth-child(3n) {
+  border-radius: 2px;
+  clip-path: polygon(50% 0, 62% 36%, 100% 50%, 62% 64%, 50% 100%, 38% 64%, 0 50%, 38% 36%);
+}
+
+.confetti:nth-child(4n) {
+  width: 14px;
+  height: 14px;
 }
 
 @keyframes screenIn {
@@ -783,6 +897,17 @@ h2 {
 
   50% {
     transform: rotate(-10deg) translate3d(0, -18px, 0);
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-13px) scale(1.04);
   }
 }
 
@@ -952,12 +1077,12 @@ h2 {
 
   .brand-strip {
     align-items: center;
-    justify-content: space-between;
-    flex-direction: row;
+    justify-content: center;
+    flex-direction: column;
   }
 
   .event-pill {
-    text-align: right;
+    text-align: center;
   }
 
   .screen.is-active {
