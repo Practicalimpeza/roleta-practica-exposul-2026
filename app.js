@@ -48,6 +48,9 @@ let currentParticipantName = "";
 let currentCode = "";
 let ambientDragStart = null;
 let ambientDragResetTimer = 0;
+let playfulDrag = null;
+let playfulCoastFrame = 0;
+let suppressNextOfficialClick = false;
 
 function drawWheel() {
   const size = canvas.width;
@@ -162,7 +165,13 @@ function beginParticipation(event) {
   window.setTimeout(() => startRegisteredSpin(name), 180);
 }
 
-function spinWheel() {
+function spinWheel(event) {
+  if (suppressNextOfficialClick) {
+    event?.preventDefault();
+    suppressNextOfficialClick = false;
+    return;
+  }
+
   if (spinning) {
     return;
   }
@@ -198,7 +207,7 @@ async function startRegisteredSpin(name) {
   currentPrize = "";
   currentCode = "";
   winnerBox.classList.remove("is-hot");
-  setClaimHint("Conferindo se este nome já participou.", "success");
+  setClaimHint("Conferindo sua participação.", "success");
 
   try {
     const result = await requestSpinResult(name);
@@ -214,7 +223,7 @@ async function startRegisteredSpin(name) {
 
     if (result.already) {
       finishWheelBusy("Giro realizado");
-      setClaimHint("Este nome já tinha participado. Resultado carregado.", "warning");
+      setClaimHint(getAlreadyHint(result.alreadyReason), "warning");
       showResult(currentParticipantName, currentPrize, {
         already: true,
         code: currentCode
@@ -252,6 +261,7 @@ function animateWheelToPrize(prizeLabel, onComplete) {
   const delta = target >= current ? target - current : 360 - current + target;
 
   rotation += extraTurns * 360 + delta;
+  canvas.style.transition = "";
   canvas.style.transform = `rotate(${rotation}deg)`;
 
   window.setTimeout(() => {
@@ -316,6 +326,14 @@ function firstName(name) {
   return name.trim().split(/\s+/)[0] || "participante";
 }
 
+function getAlreadyHint(reason = "") {
+  if (reason === "device") {
+    return "Este aparelho já tinha participado. Resultado carregado.";
+  }
+
+  return "Esta participação já tinha sido registrada. Resultado carregado.";
+}
+
 function sendWhatsAppMessage(event) {
   event.preventDefault();
 
@@ -348,7 +366,11 @@ function requestSpinResult(name) {
     });
   }
 
-  return requestJsonp(backendUrl, { name });
+  return requestJsonp(backendUrl, {
+    name,
+    round: participationRound,
+    device: getDeviceFingerprint()
+  });
 }
 
 function requestJsonp(url, params = {}) {
@@ -414,6 +436,36 @@ function getRegistrationHint() {
   return "Backend ainda não configurado para registrar o sorteio.";
 }
 
+function getDeviceFingerprint() {
+  const source = [
+    navigator.userAgent,
+    navigator.language,
+    Array.isArray(navigator.languages) ? navigator.languages.join(",") : "",
+    navigator.platform,
+    navigator.hardwareConcurrency || "",
+    navigator.deviceMemory || "",
+    screen.width,
+    screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+    navigator.maxTouchPoints || 0
+  ].join("|");
+
+  return hashFingerprint(source);
+}
+
+function hashFingerprint(value) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36).toUpperCase();
+}
+
 function getSavedResult() {
   try {
     return JSON.parse(localStorage.getItem(resultStorageKey));
@@ -450,6 +502,115 @@ function setClaimHint(message, tone = "") {
   claimHint.textContent = message;
   claimHint.classList.toggle("is-warning", tone === "warning");
   claimHint.classList.toggle("is-success", tone === "success");
+}
+
+function startPlayfulWheelDrag(event) {
+  if (spinning || spinButton.disabled || nameSheet.classList.contains("is-open")) {
+    return;
+  }
+
+  if (event.pointerType === "mouse" && event.button !== 0) {
+    return;
+  }
+
+  window.cancelAnimationFrame(playfulCoastFrame);
+  playfulCoastFrame = 0;
+
+  playfulDrag = {
+    pointerId: event.pointerId,
+    lastAngle: getWheelPointerAngle(event),
+    lastTime: performance.now(),
+    moved: false,
+    velocity: 0
+  };
+
+  spinButton.classList.add("is-play-dragging");
+  spinButton.setPointerCapture?.(event.pointerId);
+}
+
+function movePlayfulWheelDrag(event) {
+  if (!playfulDrag || playfulDrag.pointerId !== event.pointerId || spinning) {
+    return;
+  }
+
+  const angle = getWheelPointerAngle(event);
+  const now = performance.now();
+  const delta = getShortestAngleDelta(playfulDrag.lastAngle, angle);
+  const elapsed = Math.max(now - playfulDrag.lastTime, 16);
+
+  if (Math.abs(delta) > 0.35) {
+    playfulDrag.moved = true;
+  }
+
+  playfulDrag.velocity = (delta / elapsed) * 16.67;
+  playfulDrag.lastAngle = angle;
+  playfulDrag.lastTime = now;
+  rotation += delta;
+  renderPlayfulRotation();
+  event.preventDefault();
+}
+
+function endPlayfulWheelDrag(event) {
+  if (!playfulDrag || playfulDrag.pointerId !== event.pointerId) {
+    return;
+  }
+
+  const shouldSuppressClick = playfulDrag.moved;
+  const velocity = playfulDrag.velocity;
+
+  spinButton.releasePointerCapture?.(event.pointerId);
+  spinButton.classList.remove("is-play-dragging");
+  playfulDrag = null;
+
+  if (shouldSuppressClick) {
+    suppressNextOfficialClick = true;
+    window.setTimeout(() => {
+      suppressNextOfficialClick = false;
+    }, 350);
+    coastPlayfulWheel(velocity);
+  }
+}
+
+function cancelPlayfulWheelDrag(event) {
+  if (playfulDrag && playfulDrag.pointerId === event.pointerId) {
+    spinButton.releasePointerCapture?.(event.pointerId);
+    spinButton.classList.remove("is-play-dragging");
+    playfulDrag = null;
+  }
+}
+
+function getWheelPointerAngle(event) {
+  const rect = spinButton.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  return (Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180) / Math.PI;
+}
+
+function getShortestAngleDelta(from, to) {
+  return ((to - from + 540) % 360) - 180;
+}
+
+function renderPlayfulRotation() {
+  canvas.style.transition = "none";
+  canvas.style.transform = `rotate(${rotation}deg)`;
+}
+
+function coastPlayfulWheel(initialVelocity) {
+  let velocity = clamp(initialVelocity, -22, 22);
+
+  function tick() {
+    if (spinning || Math.abs(velocity) < 0.08) {
+      canvas.style.transition = "";
+      return;
+    }
+
+    rotation += velocity;
+    renderPlayfulRotation();
+    velocity *= 0.94;
+    playfulCoastFrame = window.requestAnimationFrame(tick);
+  }
+
+  tick();
 }
 
 function handleAmbientPointerDown(event) {
@@ -552,6 +713,10 @@ restoreSavedResult();
 
 nameForm.addEventListener("submit", beginParticipation);
 spinButton.addEventListener("click", spinWheel);
+spinButton.addEventListener("pointerdown", startPlayfulWheelDrag);
+spinButton.addEventListener("pointermove", movePlayfulWheelDrag);
+spinButton.addEventListener("pointerup", endPlayfulWheelDrag);
+spinButton.addEventListener("pointercancel", cancelPlayfulWheelDrag);
 claimForm.addEventListener("submit", sendWhatsAppMessage);
 closeNameSheet.addEventListener("click", closeNameSheetPanel);
 nameSheet.addEventListener("click", (event) => {

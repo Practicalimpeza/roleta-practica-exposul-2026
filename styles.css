@@ -483,7 +483,7 @@ body.is-dragging .spark {
   color: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 .wheel-trigger::before,
@@ -509,6 +509,15 @@ body.is-dragging .spark {
 
 .wheel-trigger:active {
   transform: scale(0.985);
+}
+
+.wheel-trigger.is-play-dragging {
+  cursor: grabbing;
+}
+
+.wheel-trigger.is-play-dragging .tap-chip {
+  animation: none;
+  transform: translateX(-50%) translateY(-3px);
 }
 
 .wheel-trigger:focus-visible {
