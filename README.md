@@ -5,11 +5,11 @@ Site estático mobile-first para a roleta de prêmios da Práctica no jantar da 
 ## Fluxo
 
 1. A pessoa abre pelo QR code no celular.
-2. Vê a roleta e toca para girar.
+2. Vê a roleta e toca na própria roleta para girar.
 3. Informa o nome completo.
 4. A roleta gira uma única vez naquele celular/navegador.
 5. O resultado fica salvo localmente.
-6. O botão abre uma mensagem pronta no WhatsApp `+55 67 8413-2037`.
+6. O botão do resultado abre uma mensagem pronta no WhatsApp `+55 67 8413-2037`.
 
 ## Como trocar os prêmios
 

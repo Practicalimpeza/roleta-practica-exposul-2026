@@ -21,6 +21,7 @@ const nameSheet = document.querySelector("#nameSheet");
 const closeNameSheet = document.querySelector("#closeNameSheet");
 const guestName = document.querySelector("#guestName");
 const spinButton = document.querySelector("#spinButton");
+const tapChip = document.querySelector("#tapChip");
 const claimForm = document.querySelector("#claimForm");
 const whatsappButton = document.querySelector("#whatsappButton");
 const claimHint = document.querySelector("#claimHint");
@@ -168,7 +169,8 @@ function spinWheel() {
 
   spinning = true;
   spinButton.disabled = true;
-  spinButton.textContent = "Girando...";
+  spinButton.classList.add("is-spinning");
+  tapChip.textContent = "Girando...";
   currentPrize = "";
   winnerBox.classList.remove("is-hot");
   setClaimHint(`${firstName(currentParticipantName)}, segura essa emoção.`, "success");
@@ -199,7 +201,8 @@ function showResult(name, prize) {
   winnerText.textContent = prize;
   winnerBox.classList.add("is-hot");
   whatsappButton.disabled = false;
-  spinButton.textContent = "Giro realizado";
+  spinButton.classList.remove("is-spinning");
+  tapChip.textContent = "Giro realizado";
   spinButton.disabled = true;
   showScreen("result");
 }

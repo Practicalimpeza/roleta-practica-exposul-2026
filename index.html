@@ -12,6 +12,9 @@
       <span class="bubble bubble-one"></span>
       <span class="bubble bubble-two"></span>
       <span class="bubble bubble-three"></span>
+      <span class="spark spark-one"></span>
+      <span class="spark spark-two"></span>
+      <span class="spark spark-three"></span>
       <span class="ribbon ribbon-one"></span>
       <span class="ribbon ribbon-two"></span>
     </div>
@@ -33,17 +36,18 @@
         </div>
 
         <div class="wheel-zone" aria-label="Roleta de prêmios">
-          <div class="wheel-frame">
-            <div class="pointer" aria-hidden="true"></div>
+          <button class="wheel-trigger wheel-frame" id="spinButton" type="button" aria-describedby="claimHint" aria-label="Girar roleta de prêmios">
+            <span class="tap-ring" aria-hidden="true"></span>
+            <span class="pointer" aria-hidden="true"></span>
             <canvas id="wheelCanvas" width="720" height="720"></canvas>
-            <div class="wheel-center" aria-hidden="true">
+            <span class="wheel-center" aria-hidden="true">
               <img src="assets/logo-practica-transparent.png" alt="">
-            </div>
-          </div>
+            </span>
+            <span class="tap-chip" id="tapChip">Toque na roleta</span>
+          </button>
         </div>
 
-        <button class="primary-button spin-button" id="spinButton" type="button">Girar roleta</button>
-        <p class="microcopy claim-hint" id="claimHint">Uma chance por celular.</p>
+        <p class="microcopy claim-hint" id="claimHint">A roleta só gira uma vez neste celular.</p>
       </section>
 
       <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
