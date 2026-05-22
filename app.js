@@ -155,7 +155,7 @@ function beginParticipation(event) {
   }
 
   currentParticipantName = name;
-  playerName.textContent = `${firstName(name)}, a roleta é sua.`;
+  playerName.textContent = `Boa sorte, ${firstName(name)}!`;
   setClaimHint(getRegistrationHint(), isBackendConfigured() || isLocalDemo() ? "success" : "warning");
   closeNameSheetPanel();
   window.setTimeout(() => startRegisteredSpin(name), 180);
@@ -275,8 +275,8 @@ function showResult(name, prize, options = {}) {
   resultCode.hidden = !currentCode;
   resultCode.textContent = currentCode ? `Código de conferência: ${currentCode}` : "";
   resultNote.textContent = options.already
-    ? "Este nome já tinha um resultado registrado. A equipe pode conferir na planilha."
-    : "Mostre a mensagem para a equipe conferir o prêmio e o código na planilha.";
+    ? "Este nome já tinha um resultado registrado. Mostre esta tela para a equipe."
+    : "Mostre esta tela ou envie a mensagem para retirar seu prêmio.";
   winnerBox.classList.add("is-hot");
   whatsappButton.disabled = false;
   showScreen("result");

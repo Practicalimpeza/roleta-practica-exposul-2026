@@ -563,7 +563,7 @@ body.is-dragging .spark {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  padding: 14px;
+  padding: 0;
   border: 8px solid rgba(255, 255, 255, 0.96);
   border-radius: 50%;
   background: #ffffff;
@@ -573,55 +573,11 @@ body.is-dragging .spark {
   overflow: hidden;
 }
 
-.center-mark {
-  position: relative;
-  width: 64%;
-  height: 58%;
+.wheel-center img {
+  width: 76%;
+  height: auto;
   display: block;
-}
-
-.center-bowl {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 0;
-  height: 70%;
-  border-radius: 8px 8px 999px 999px;
-  background: linear-gradient(180deg, #66d0ca, var(--brand));
-  clip-path: polygon(0 12%, 26% 31%, 52% 36%, 77% 28%, 100% 6%, 94% 54%, 80% 82%, 58% 100%, 34% 96%, 15% 76%, 4% 44%);
-}
-
-.center-bowl::after {
-  content: "";
-  position: absolute;
-  left: 14%;
-  top: 6%;
-  width: 52%;
-  height: 28%;
-  border-radius: 50%;
-  background: rgba(18, 115, 122, 0.32);
-  transform: rotate(6deg);
-}
-
-.center-bubble {
-  position: absolute;
-  z-index: 1;
-  border-radius: 999px;
-  background: #66d0ca;
-}
-
-.center-bubble-one {
-  top: 0;
-  left: 60%;
-  width: 18%;
-  aspect-ratio: 1;
-}
-
-.center-bubble-two {
-  top: 19%;
-  left: 42%;
-  width: 11%;
-  aspect-ratio: 1;
+  transform: translateY(-2%);
 }
 
 .tap-chip {
