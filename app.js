@@ -27,10 +27,13 @@ const whatsappButton = document.querySelector("#whatsappButton");
 const claimHint = document.querySelector("#claimHint");
 const playerName = document.querySelector("#playerName");
 const resultName = document.querySelector("#resultName");
+const resultCode = document.querySelector("#resultCode");
+const resultNote = document.querySelector("#resultNote");
 const winnerText = document.querySelector("#winnerText");
 const winnerBox = document.querySelector(".winner");
 const confettiLayer = document.querySelector("#confettiLayer");
 
+const backendUrl = window.PRACTICA_BACKEND_URL || "";
 const whatsappNumber = "556784132037";
 const resultStorageKey = "practica-roleta-exposul-2026-result";
 const confettiColors = ["#51c2bd", "#f8c84b", "#ff755f", "#9bd84b", "#489de2", "#27323f"];
@@ -39,6 +42,7 @@ let rotation = 0;
 let spinning = false;
 let currentPrize = "";
 let currentParticipantName = "";
+let currentCode = "";
 
 function drawWheel() {
   const size = canvas.width;
@@ -147,9 +151,9 @@ function beginParticipation(event) {
 
   currentParticipantName = name;
   playerName.textContent = `${firstName(name)}, a roleta é sua.`;
-  setClaimHint("Tudo pronto. Boa sorte!", "success");
+  setClaimHint(getRegistrationHint(), isBackendConfigured() || isLocalDemo() ? "success" : "warning");
   closeNameSheetPanel();
-  window.setTimeout(() => spinWheel(), 180);
+  window.setTimeout(() => startRegisteredSpin(name), 180);
 }
 
 function spinWheel() {
@@ -167,15 +171,73 @@ function spinWheel() {
     return;
   }
 
+  startRegisteredSpin(currentParticipantName);
+}
+
+async function startRegisteredSpin(name) {
+  if (spinning) {
+    return;
+  }
+
+  if (getSavedResult()) {
+    restoreSavedResult();
+    return;
+  }
+
   spinning = true;
   spinButton.disabled = true;
   spinButton.classList.add("is-spinning");
-  tapChip.textContent = "Girando...";
+  tapChip.textContent = "Registrando...";
   currentPrize = "";
+  currentCode = "";
   winnerBox.classList.remove("is-hot");
-  setClaimHint(`${firstName(currentParticipantName)}, segura essa emoção.`, "success");
+  setClaimHint("Conferindo se este nome já participou.", "success");
 
-  const winningIndex = pickPrizeIndex();
+  try {
+    const result = await requestSpinResult(name);
+
+    if (!result.ok || !result.prize) {
+      throw new Error(result.error || "Não foi possível registrar.");
+    }
+
+    currentParticipantName = result.name || name;
+    currentPrize = result.prize;
+    currentCode = result.code || "";
+    saveResult(currentParticipantName, currentPrize, currentCode);
+
+    if (result.already) {
+      finishWheelBusy("Giro realizado");
+      setClaimHint("Este nome já tinha participado. Resultado carregado.", "warning");
+      showResult(currentParticipantName, currentPrize, {
+        already: true,
+        code: currentCode
+      });
+      return;
+    }
+
+    tapChip.textContent = "Girando...";
+    setClaimHint(`${firstName(currentParticipantName)}, segura essa emoção.`, "success");
+    animateWheelToPrize(currentPrize, () => {
+      finishWheelBusy("Giro realizado");
+      showResult(currentParticipantName, currentPrize, {
+        already: false,
+        code: currentCode
+      });
+      launchConfetti(150);
+    });
+  } catch (error) {
+    spinning = false;
+    spinButton.disabled = false;
+    spinButton.classList.remove("is-spinning");
+    tapChip.textContent = "Toque na roleta";
+    setClaimHint("Não conseguimos registrar agora. Confira a internet e tente novamente.", "warning");
+    console.warn(error);
+  }
+}
+
+function animateWheelToPrize(prizeLabel, onComplete) {
+  const winningIndex = findPrizeIndex(prizeLabel);
+
   const slice = 360 / prizes.length;
   const current = normalize(rotation);
   const target = normalize(360 - (winningIndex + 0.5) * slice);
@@ -186,24 +248,30 @@ function spinWheel() {
   canvas.style.transform = `rotate(${rotation}deg)`;
 
   window.setTimeout(() => {
-    spinning = false;
-    currentPrize = prizes[winningIndex].label;
-    saveResult(currentParticipantName, currentPrize);
-    showResult(currentParticipantName, currentPrize);
-    launchConfetti(150);
+    onComplete();
   }, 5000);
 }
 
-function showResult(name, prize) {
+function finishWheelBusy(label) {
+  spinning = false;
+  spinButton.classList.remove("is-spinning");
+  tapChip.textContent = label;
+  spinButton.disabled = true;
+}
+
+function showResult(name, prize, options = {}) {
   currentParticipantName = name;
   currentPrize = prize;
+  currentCode = options.code || currentCode;
   resultName.textContent = firstName(name);
   winnerText.textContent = prize;
+  resultCode.hidden = !currentCode;
+  resultCode.textContent = currentCode ? `Código de conferência: ${currentCode}` : "";
+  resultNote.textContent = options.already
+    ? "Este nome já tinha um resultado registrado. A equipe pode conferir na planilha."
+    : "Mostre a mensagem para a equipe conferir o prêmio e o código na planilha.";
   winnerBox.classList.add("is-hot");
   whatsappButton.disabled = false;
-  spinButton.classList.remove("is-spinning");
-  tapChip.textContent = "Giro realizado";
-  spinButton.disabled = true;
   showScreen("result");
 }
 
@@ -217,8 +285,23 @@ function pickPrizeIndex() {
   return Math.floor(Math.random() * prizes.length);
 }
 
+function findPrizeIndex(prizeLabel) {
+  const normalizedPrize = normalizeText(prizeLabel);
+  const index = prizes.findIndex((prize) => normalizeText(prize.label) === normalizedPrize);
+  return index >= 0 ? index : pickPrizeIndex();
+}
+
 function normalize(value) {
   return ((value % 360) + 360) % 360;
+}
+
+function normalizeText(value) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
 }
 
 function firstName(name) {
@@ -232,10 +315,89 @@ function sendWhatsAppMessage(event) {
     return;
   }
 
-  const message = `Olá! Meu nome é ${currentParticipantName} e ganhei o prêmio ${currentPrize} na Roleta Práctica do jantar da EXPOSUL 2026.`;
+  const codeMessage = currentCode ? ` Código de conferência: ${currentCode}.` : "";
+  const message = `Olá! Meu nome é ${currentParticipantName} e ganhei o prêmio ${currentPrize} na Roleta Práctica do jantar da EXPOSUL 2026.${codeMessage}`;
   const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
   window.open(url, "_blank", "noopener");
+}
+
+function requestSpinResult(name) {
+  if (!isBackendConfigured()) {
+    if (!isLocalDemo()) {
+      return Promise.resolve({
+        ok: false,
+        error: "backend_not_configured"
+      });
+    }
+
+    return Promise.resolve({
+      ok: true,
+      already: false,
+      name,
+      prize: prizes[pickPrizeIndex()].label,
+      code: "TESTE"
+    });
+  }
+
+  return requestJsonp(backendUrl, { name });
+}
+
+function requestJsonp(url, params = {}) {
+  const callbackName = `practicaRoleta_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const requestUrl = new URL(url);
+
+  Object.entries(params).forEach(([key, value]) => {
+    requestUrl.searchParams.set(key, value);
+  });
+  requestUrl.searchParams.set("callback", callbackName);
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Tempo esgotado ao falar com o backend."));
+    }, 12000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      script.remove();
+      delete window[callbackName];
+    }
+
+    window[callbackName] = (payload) => {
+      cleanup();
+      resolve(payload);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Falha ao carregar o backend."));
+    };
+
+    script.src = requestUrl.toString();
+    document.body.appendChild(script);
+  });
+}
+
+function isBackendConfigured() {
+  return Boolean(backendUrl.trim());
+}
+
+function isLocalDemo() {
+  return ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+}
+
+function getRegistrationHint() {
+  if (isBackendConfigured()) {
+    return "Vamos registrar sua participação.";
+  }
+
+  if (isLocalDemo()) {
+    return "Modo teste: backend ainda não configurado.";
+  }
+
+  return "Backend ainda não configurado para registrar o sorteio.";
 }
 
 function getSavedResult() {
@@ -246,10 +408,11 @@ function getSavedResult() {
   }
 }
 
-function saveResult(name, prize) {
+function saveResult(name, prize, code = "") {
   localStorage.setItem(resultStorageKey, JSON.stringify({
     name,
     prize,
+    code,
     date: new Date().toISOString()
   }));
 }
@@ -263,7 +426,10 @@ function restoreSavedResult() {
 
   guestName.value = result.name;
   setClaimHint("Este celular já registrou um giro.", "warning");
-  showResult(result.name, result.prize);
+  showResult(result.name, result.prize, {
+    already: true,
+    code: result.code || ""
+  });
 }
 
 function setClaimHint(message, tone = "") {
