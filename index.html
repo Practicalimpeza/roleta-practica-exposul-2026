@@ -9,14 +9,15 @@
   </head>
   <body>
     <div class="ambient" aria-hidden="true">
-      <span class="bubble bubble-one"></span>
-      <span class="bubble bubble-two"></span>
-      <span class="bubble bubble-three"></span>
+      <span class="wash wash-one"></span>
+      <span class="wash wash-two"></span>
       <span class="spark spark-one"></span>
       <span class="spark spark-two"></span>
       <span class="spark spark-three"></span>
+      <span class="spark spark-four"></span>
       <span class="ribbon ribbon-one"></span>
       <span class="ribbon ribbon-two"></span>
+      <span class="ribbon ribbon-three"></span>
     </div>
 
     <main class="app-shell">
@@ -36,6 +37,7 @@
         </div>
 
         <div class="wheel-zone" aria-label="Roleta de prêmios">
+          <span class="wheel-aura" aria-hidden="true"></span>
           <button class="wheel-trigger wheel-frame" id="spinButton" type="button" aria-describedby="claimHint" aria-label="Girar roleta de prêmios">
             <span class="tap-ring" aria-hidden="true"></span>
             <span class="pointer" aria-hidden="true"></span>
@@ -45,13 +47,16 @@
             </span>
             <span class="tap-chip" id="tapChip">Toque na roleta</span>
           </button>
+          <span class="wheel-shadow" aria-hidden="true"></span>
         </div>
 
         <p class="microcopy claim-hint" id="claimHint">A roleta só gira uma vez neste celular.</p>
       </section>
 
       <section class="screen result-screen" id="resultScreen" aria-labelledby="resultTitle">
-        <div class="result-badge" aria-hidden="true">★</div>
+        <div class="result-badge" aria-hidden="true">
+          <span>OK</span>
+        </div>
         <p class="kicker">Parabéns, <span id="resultName">participante</span></p>
         <h2 id="resultTitle">Você ganhou</h2>
 
@@ -72,6 +77,7 @@
     <div class="name-sheet" id="nameSheet" aria-hidden="true" hidden>
       <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
         <button class="sheet-close" id="closeNameSheet" type="button" aria-label="Fechar">×</button>
+        <span class="sheet-handle" aria-hidden="true"></span>
         <p class="kicker">Antes de girar</p>
         <h2 id="nameTitle">Qual é seu nome?</h2>
         <form class="entry-form" id="nameForm">

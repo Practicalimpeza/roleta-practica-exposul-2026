@@ -116,6 +116,7 @@ function wrapCanvasText(text, x, y, maxWidth, lineHeight) {
 }
 
 function openNameSheet() {
+  vibrate(16);
   nameSheet.hidden = false;
   nameSheet.classList.add("is-open");
   nameSheet.setAttribute("aria-hidden", "false");
@@ -185,6 +186,7 @@ async function startRegisteredSpin(name) {
   }
 
   spinning = true;
+  vibrate([24, 28, 24]);
   spinButton.disabled = true;
   spinButton.classList.add("is-spinning");
   tapChip.textContent = "Registrando...";
@@ -260,6 +262,7 @@ function finishWheelBusy(label) {
 }
 
 function showResult(name, prize, options = {}) {
+  vibrate([34, 26, 60]);
   currentParticipantName = name;
   currentPrize = prize;
   currentCode = options.code || currentCode;
@@ -386,6 +389,12 @@ function isBackendConfigured() {
 
 function isLocalDemo() {
   return ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+}
+
+function vibrate(pattern) {
+  if ("vibrate" in navigator) {
+    navigator.vibrate(pattern);
+  }
 }
 
 function getRegistrationHint() {
