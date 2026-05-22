@@ -40,7 +40,6 @@ const participationRound = "oficial-1";
 const resultStorageKey = `practica-roleta-exposul-2026-result-${participationRound}`;
 const confettiColors = ["#51c2bd", "#f8c84b", "#ff755f", "#9bd84b", "#489de2", "#27323f"];
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-const playfulSensitivity = 0.35;
 
 let rotation = 0;
 let spinning = false;
@@ -541,19 +540,20 @@ function movePlayfulWheelDrag(event) {
   const movementX = event.clientX - playfulDrag.lastX;
   const movementY = event.clientY - playfulDrag.lastY;
   const angleDelta = getShortestAngleDelta(playfulDrag.lastAngle, pointer.angle);
-  const delta = getPlayfulRotationDelta(pointer, movementX, movementY, angleDelta);
+  const followDelta = getFingerFollowDelta(pointer, movementX, movementY, angleDelta);
+  const launchDelta = getReleaseImpulseDelta(pointer, movementX, movementY, angleDelta);
   const elapsed = Math.max(now - playfulDrag.lastTime, 16);
 
   if (Math.abs(movementX) + Math.abs(movementY) > 3) {
     playfulDrag.moved = true;
   }
 
-  playfulDrag.velocity = (delta / elapsed) * 16.67;
+  playfulDrag.velocity = (launchDelta / elapsed) * 16.67;
   playfulDrag.lastAngle = pointer.angle;
   playfulDrag.lastX = event.clientX;
   playfulDrag.lastY = event.clientY;
   playfulDrag.lastTime = now;
-  rotation += delta;
+  rotation += followDelta;
   renderPlayfulRotation();
   event.preventDefault();
 }
@@ -608,23 +608,42 @@ function getShortestAngleDelta(from, to) {
   return ((to - from + 540) % 360) - 180;
 }
 
-function getPlayfulRotationDelta(pointer, movementX, movementY, angleDelta) {
+function getFingerFollowDelta(pointer, movementX, movementY, angleDelta) {
+  const intent = getWheelGestureIntent(pointer, movementX, movementY, angleDelta);
+  const fallbackDegrees = intent.movementDistance * intent.sign * 0.22;
+  const dominantGesture = Math.abs(intent.tangentialDegrees) > Math.abs(fallbackDegrees)
+    ? intent.tangentialDegrees
+    : fallbackDegrees;
+
+  return dominantGesture + angleDelta * 0.05;
+}
+
+function getReleaseImpulseDelta(pointer, movementX, movementY, angleDelta) {
+  const intent = getWheelGestureIntent(pointer, movementX, movementY, angleDelta);
+  const tangentialImpulse = intent.tangentialDegrees * 1.45;
+  const swipeImpulse = intent.swipePixels * 0.78;
+  const fallbackImpulse = intent.movementDistance * intent.sign * 0.55;
+
+  return [tangentialImpulse, swipeImpulse, fallbackImpulse].reduce((best, value) => (
+    Math.abs(value) > Math.abs(best) ? value : best
+  ), 0);
+}
+
+function getWheelGestureIntent(pointer, movementX, movementY, angleDelta) {
   const angleRadians = (pointer.angle * Math.PI) / 180;
   const movementDistance = Math.hypot(movementX, movementY);
   const tangentialPixels = -Math.sin(angleRadians) * movementX + Math.cos(angleRadians) * movementY;
-  const tangentialDegrees = (tangentialPixels / Math.max(pointer.radius, 1)) * (180 / Math.PI) * 7.4;
+  const tangentialDegrees = (tangentialPixels / Math.max(pointer.radius, 1)) * (180 / Math.PI);
   const horizontalDirection = pointer.y <= pointer.centerY ? 1 : -1;
   const verticalDirection = pointer.x >= pointer.centerX ? 1 : -1;
   const swipePixels = movementX * horizontalDirection + movementY * verticalDirection;
-  const swipeDegrees = swipePixels * 3.05;
-  const fallbackSign = Math.sign(swipePixels) || Math.sign(tangentialPixels) || Math.sign(angleDelta) || 1;
-  const fallbackDegrees = movementDistance * fallbackSign * 2.45;
-  const dominantGesture = [tangentialDegrees, swipeDegrees, fallbackDegrees].reduce((best, value) => (
-    Math.abs(value) > Math.abs(best) ? value : best
-  ), 0);
-  const centerFreedom = clamp(pointer.distanceFromCenter / (pointer.radius * 0.22), 0.55, 1);
 
-  return (dominantGesture + angleDelta * 0.18) * centerFreedom * playfulSensitivity;
+  return {
+    movementDistance,
+    swipePixels,
+    tangentialDegrees,
+    sign: Math.sign(swipePixels) || Math.sign(tangentialPixels) || Math.sign(angleDelta) || 1
+  };
 }
 
 function renderPlayfulRotation() {
@@ -633,10 +652,10 @@ function renderPlayfulRotation() {
 }
 
 function coastPlayfulWheel(initialVelocity) {
-  let velocity = clamp(initialVelocity * 2.4 * playfulSensitivity, -28, 28);
+  let velocity = clamp(initialVelocity * 1.15, -36, 36);
 
-  if (Math.abs(velocity) > 0 && Math.abs(velocity) < 2.5) {
-    velocity = Math.sign(velocity) * 2.5;
+  if (Math.abs(velocity) > 0 && Math.abs(velocity) < 2.8) {
+    velocity = Math.sign(velocity) * 2.8;
   }
 
   function tick() {
