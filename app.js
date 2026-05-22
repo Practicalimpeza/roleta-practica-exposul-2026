@@ -40,6 +40,7 @@ const participationRound = "oficial-1";
 const resultStorageKey = `practica-roleta-exposul-2026-result-${participationRound}`;
 const confettiColors = ["#51c2bd", "#f8c84b", "#ff755f", "#9bd84b", "#489de2", "#27323f"];
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+const playfulSensitivity = 0.35;
 
 let rotation = 0;
 let spinning = false;
@@ -623,7 +624,7 @@ function getPlayfulRotationDelta(pointer, movementX, movementY, angleDelta) {
   ), 0);
   const centerFreedom = clamp(pointer.distanceFromCenter / (pointer.radius * 0.22), 0.55, 1);
 
-  return (dominantGesture + angleDelta * 0.18) * centerFreedom;
+  return (dominantGesture + angleDelta * 0.18) * centerFreedom * playfulSensitivity;
 }
 
 function renderPlayfulRotation() {
@@ -632,10 +633,10 @@ function renderPlayfulRotation() {
 }
 
 function coastPlayfulWheel(initialVelocity) {
-  let velocity = clamp(initialVelocity * 2.4, -140, 140);
+  let velocity = clamp(initialVelocity * 2.4 * playfulSensitivity, -28, 28);
 
-  if (Math.abs(velocity) > 0 && Math.abs(velocity) < 10) {
-    velocity = Math.sign(velocity) * 10;
+  if (Math.abs(velocity) > 0 && Math.abs(velocity) < 2.5) {
+    velocity = Math.sign(velocity) * 2.5;
   }
 
   function tick() {
@@ -646,7 +647,7 @@ function coastPlayfulWheel(initialVelocity) {
 
     rotation += velocity;
     renderPlayfulRotation();
-    velocity *= 0.985;
+    velocity *= 0.976;
     playfulCoastFrame = window.requestAnimationFrame(tick);
   }
 
