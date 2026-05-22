@@ -29,10 +29,10 @@ body {
   color: var(--ink);
   font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
   background:
-    radial-gradient(circle at 12% 10%, rgba(248, 200, 75, 0.26), transparent 10rem),
-    radial-gradient(circle at 92% 16%, rgba(255, 117, 95, 0.18), transparent 9rem),
-    radial-gradient(circle at 50% 78%, rgba(72, 157, 226, 0.13), transparent 16rem),
-    linear-gradient(160deg, #e9fbf7 0%, #fffdf4 45%, #eef8ff 100%);
+    radial-gradient(circle at 50% 18%, rgba(81, 194, 189, 0.28), transparent 12rem),
+    radial-gradient(circle at 18% 72%, rgba(248, 200, 75, 0.2), transparent 11rem),
+    radial-gradient(circle at 86% 76%, rgba(255, 117, 95, 0.16), transparent 10rem),
+    linear-gradient(180deg, #effffb 0%, #fffdf4 52%, #eff8ff 100%);
   overflow-x: hidden;
 }
 
@@ -71,14 +71,14 @@ button {
 }
 
 .wash-one {
-  top: 7%;
-  right: -8rem;
+  top: 10%;
+  right: -11rem;
   background: var(--brand);
 }
 
 .wash-two {
-  left: -9rem;
-  bottom: 12%;
+  left: -11rem;
+  bottom: 9%;
   background: var(--sun);
   animation-delay: -4s;
 }
@@ -93,13 +93,13 @@ button {
 }
 
 .ribbon-one {
-  top: 26%;
-  left: -18px;
+  top: 44%;
+  left: -28px;
 }
 
 .ribbon-two {
-  right: 18%;
-  bottom: 22%;
+  right: -18px;
+  bottom: 24%;
   background: var(--lime);
   transform: rotate(18deg);
   animation-delay: -2.8s;
@@ -108,8 +108,8 @@ button {
 .ribbon-three {
   width: 44px;
   height: 11px;
-  top: 47%;
-  right: -10px;
+  top: 62%;
+  right: -24px;
   background: var(--coral);
   transform: rotate(-12deg);
   animation-delay: -1.6s;
@@ -157,36 +157,24 @@ button {
   width: min(100vw, 480px);
   min-height: 100svh;
   margin: 0 auto;
-  padding: max(18px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
+  padding: max(22px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom));
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 12px;
-}
-
-.app-shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    linear-gradient(rgba(18, 115, 122, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18, 115, 122, 0.04) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 78%, transparent);
-  opacity: 0.75;
+  gap: 18px;
 }
 
 .brand-strip {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   animation: dropIn 520ms ease both;
+  text-align: center;
 }
 
 .brand {
-  width: 128px;
+  width: 132px;
   height: auto;
   display: block;
   filter: drop-shadow(0 9px 18px rgba(18, 115, 122, 0.1));
@@ -194,15 +182,13 @@ button {
 
 .event-pill {
   max-width: 100%;
-  padding: 9px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.68);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.58)),
-    rgba(255, 255, 255, 0.64);
-  box-shadow: 0 14px 32px rgba(29, 42, 54, 0.1);
-  text-align: left;
-  backdrop-filter: blur(14px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+  backdrop-filter: none;
 }
 
 .event-pill span,
@@ -223,7 +209,7 @@ button {
 
 .event-pill strong {
   display: block;
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--brand-dark);
   font-size: 0.82rem;
   line-height: 1.05;
@@ -233,8 +219,9 @@ button {
   min-height: 0;
   width: min(100%, calc(100vw - 36px));
   display: none;
-  align-content: center;
-  gap: 14px;
+  align-content: start;
+  justify-items: center;
+  gap: 18px;
 }
 
 .screen.is-active {
@@ -244,23 +231,14 @@ button {
 
 .step-copy,
 .result-screen {
-  text-align: left;
+  text-align: center;
 }
 
 .step-copy {
   position: relative;
-}
-
-.step-copy::before {
-  content: "";
-  position: absolute;
-  left: -18px;
-  top: 1.25rem;
-  width: 6px;
-  height: 78px;
-  border-radius: 999px;
-  background: linear-gradient(var(--sun), var(--brand));
-  box-shadow: 0 12px 24px rgba(18, 115, 122, 0.16);
+  width: 100%;
+  display: grid;
+  justify-items: center;
 }
 
 .kicker {
@@ -279,10 +257,10 @@ h2 {
 }
 
 h1 {
-  max-width: 9ch;
+  max-width: 10ch;
   margin-top: 8px;
-  font-size: clamp(2.9rem, 13.6vw, 4.25rem);
-  line-height: 0.9;
+  font-size: clamp(2.85rem, 13vw, 4.1rem);
+  line-height: 0.92;
   text-wrap: balance;
 }
 
@@ -293,8 +271,8 @@ h2 {
 }
 
 .step-copy p:not(.kicker) {
-  max-width: 20rem;
-  margin: 14px 0 0;
+  max-width: 17.5rem;
+  margin: 12px auto 0;
   color: #425260;
   font-size: 1.05rem;
   line-height: 1.35;
@@ -374,10 +352,11 @@ h2 {
 .claim-hint,
 .microcopy {
   min-height: 1.15em;
-  margin: 0;
+  margin: 0 auto;
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.35;
+  text-align: center;
 }
 
 .claim-hint.is-warning {
@@ -391,15 +370,16 @@ h2 {
 }
 
 .wheel-screen {
-  align-content: start;
-  padding-top: 1vh;
+  align-content: center;
+  padding-top: 0;
 }
 
 .wheel-zone {
   position: relative;
   display: grid;
   place-items: center;
-  padding: 4px 0 10px;
+  padding: 2px 0 8px;
+  width: 100%;
 }
 
 .wheel-frame {
@@ -651,6 +631,7 @@ h2 {
 
 .result-screen {
   align-content: center;
+  justify-items: center;
   gap: 16px;
 }
 
@@ -680,25 +661,18 @@ h2 {
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 150px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(245, 255, 252, 0.78)),
-    rgba(255, 255, 255, 0.78);
-  box-shadow:
-    var(--shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.56);
-  backdrop-filter: blur(12px);
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  text-align: center;
 }
 
 .winner::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 8px;
-  background: linear-gradient(var(--sun), var(--brand), var(--blue));
+  display: none;
 }
 
 .winner span {
@@ -707,17 +681,18 @@ h2 {
   font-size: 0.8rem;
   font-weight: 950;
   text-transform: uppercase;
-  padding-left: 4px;
+  padding-left: 0;
 }
 
 .winner strong {
   display: block;
   margin-top: 9px;
   color: var(--brand-dark);
-  font-size: clamp(2rem, 13vw, 3.8rem);
+  font-size: clamp(2.2rem, 13vw, 3.8rem);
   line-height: 0.95;
-  padding-left: 4px;
+  padding-left: 0;
   text-wrap: balance;
+  filter: drop-shadow(0 10px 22px rgba(18, 115, 122, 0.14));
 }
 
 .winner.is-hot {
@@ -725,18 +700,16 @@ h2 {
 }
 
 .result-code {
-  margin: -4px 0 0;
-  padding: 11px 12px;
-  border: 1px solid rgba(18, 115, 122, 0.18);
-  border-radius: 8px;
+  margin: -2px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   color: var(--brand-dark);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(233, 251, 247, 0.78)),
-    rgba(255, 255, 255, 0.66);
+  background: transparent;
   font-size: 0.92rem;
   font-weight: 950;
   text-align: center;
-  box-shadow: 0 12px 26px rgba(18, 115, 122, 0.08);
+  box-shadow: none;
 }
 
 .confetti-layer {
