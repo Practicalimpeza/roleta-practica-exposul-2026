@@ -343,7 +343,7 @@ function isValidFullName(name) {
 
 function getAlreadyHint(reason = "") {
   if (reason === "device") {
-    return "Este aparelho já tinha participado. Resultado carregado.";
+    return "Já havia uma participação registrada com estes dados. Resultado carregado.";
   }
 
   return "Esta participação já tinha sido registrada. Resultado carregado.";
@@ -619,7 +619,7 @@ function restoreSavedResult() {
   }
 
   guestName.value = result.name;
-  setClaimHint("Este celular já registrou um giro.", "warning");
+  setClaimHint("Esta participação já tem um giro registrado.", "warning");
   showResult(result.name, result.prize, {
     already: true,
     code: result.code || ""
