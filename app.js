@@ -153,11 +153,13 @@ function beginParticipation(event) {
 
   const name = guestName.value.trim();
 
-  if (!name) {
+  if (!isValidFullName(name)) {
+    guestName.setCustomValidity("Digite nome e sobrenome para a conferência.");
     nameForm.reportValidity();
     return;
   }
 
+  guestName.setCustomValidity("");
   currentParticipantName = name;
   playerName.textContent = `Boa sorte, ${firstName(name)}!`;
   setClaimHint(getRegistrationHint(), isBackendConfigured() || isLocalDemo() ? "success" : "warning");
@@ -326,6 +328,15 @@ function firstName(name) {
   return name.trim().split(/\s+/)[0] || "participante";
 }
 
+function isValidFullName(name) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.replace(/[^A-Za-zÀ-ÿ]/g, "").length >= 2);
+
+  return parts.length >= 2 && name.trim().length >= 6;
+}
+
 function getAlreadyHint(reason = "") {
   if (reason === "device") {
     return "Este aparelho já tinha participado. Resultado carregado.";
@@ -348,7 +359,7 @@ function sendWhatsAppMessage(event) {
   window.open(url, "_blank", "noopener");
 }
 
-function requestSpinResult(name) {
+async function requestSpinResult(name) {
   if (!isBackendConfigured()) {
     if (!isLocalDemo()) {
       return Promise.resolve({
@@ -366,10 +377,13 @@ function requestSpinResult(name) {
     });
   }
 
+  const deviceInfo = await getDeviceInfo();
+
   return requestJsonp(backendUrl, {
     name,
     round: participationRound,
-    device: getDeviceFingerprint()
+    device: getDeviceFingerprint(deviceInfo),
+    deviceInfo: JSON.stringify(deviceInfo)
   });
 }
 
@@ -436,23 +450,133 @@ function getRegistrationHint() {
   return "Backend ainda não configurado para registrar o sorteio.";
 }
 
-function getDeviceFingerprint() {
+function getDeviceFingerprint(deviceInfo) {
   const source = [
-    navigator.userAgent,
-    navigator.language,
-    Array.isArray(navigator.languages) ? navigator.languages.join(",") : "",
-    navigator.platform,
-    navigator.hardwareConcurrency || "",
-    navigator.deviceMemory || "",
-    screen.width,
-    screen.height,
-    screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    Intl.DateTimeFormat().resolvedOptions().timeZone || "",
-    navigator.maxTouchPoints || 0
+    deviceInfo.userAgent,
+    deviceInfo.uaBrands,
+    deviceInfo.uaFullVersionList,
+    deviceInfo.uaModel,
+    deviceInfo.uaPlatform,
+    deviceInfo.uaPlatformVersion,
+    deviceInfo.uaArchitecture,
+    deviceInfo.uaBitness,
+    deviceInfo.platform,
+    deviceInfo.vendor,
+    deviceInfo.language,
+    deviceInfo.languages,
+    deviceInfo.timezone,
+    deviceInfo.timezoneOffset,
+    deviceInfo.screen,
+    deviceInfo.viewport,
+    deviceInfo.pixelRatio,
+    deviceInfo.hardwareConcurrency,
+    deviceInfo.deviceMemory,
+    deviceInfo.maxTouchPoints,
+    deviceInfo.connection
   ].join("|");
 
   return hashFingerprint(source);
+}
+
+async function getDeviceInfo() {
+  const userAgent = navigator.userAgent || "";
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const userAgentData = await getUserAgentData();
+
+  return {
+    userAgent,
+    uaBrands: userAgentData.brands || "",
+    uaFullVersionList: userAgentData.fullVersionList || "",
+    uaMobile: userAgentData.mobile || "",
+    uaModel: userAgentData.model || "",
+    uaPlatform: userAgentData.platform || "",
+    uaPlatformVersion: userAgentData.platformVersion || "",
+    uaArchitecture: userAgentData.architecture || "",
+    uaBitness: userAgentData.bitness || "",
+    uaWow64: userAgentData.wow64 || "",
+    browser: getBrowserName(userAgent),
+    system: getSystemName(userAgent),
+    platform: navigator.platform || "",
+    vendor: navigator.vendor || "",
+    language: navigator.language || "",
+    languages: Array.isArray(navigator.languages) ? navigator.languages.join(",") : "",
+    timezone,
+    timezoneOffset: new Date().getTimezoneOffset(),
+    screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    pixelRatio: window.devicePixelRatio || 1,
+    hardwareConcurrency: navigator.hardwareConcurrency || "",
+    deviceMemory: navigator.deviceMemory || "",
+    maxTouchPoints: navigator.maxTouchPoints || 0,
+    connection: connection
+      ? [connection.effectiveType, connection.type, connection.downlink].filter(Boolean).join("/")
+      : ""
+  };
+}
+
+async function getUserAgentData() {
+  const userAgentData = navigator.userAgentData;
+
+  if (!userAgentData) {
+    return {};
+  }
+
+  const brands = Array.isArray(userAgentData.brands)
+    ? userAgentData.brands.map((brand) => `${brand.brand} ${brand.version}`).join(",")
+    : "";
+
+  try {
+    const highEntropy = await userAgentData.getHighEntropyValues([
+      "architecture",
+      "bitness",
+      "fullVersionList",
+      "model",
+      "platform",
+      "platformVersion",
+      "wow64"
+    ]);
+
+    return {
+      brands,
+      mobile: userAgentData.mobile,
+      architecture: highEntropy.architecture || "",
+      bitness: highEntropy.bitness || "",
+      fullVersionList: Array.isArray(highEntropy.fullVersionList)
+        ? highEntropy.fullVersionList.map((brand) => `${brand.brand} ${brand.version}`).join(",")
+        : "",
+      model: highEntropy.model || "",
+      platform: highEntropy.platform || userAgentData.platform || "",
+      platformVersion: highEntropy.platformVersion || "",
+      wow64: highEntropy.wow64 || ""
+    };
+  } catch (error) {
+    return {
+      brands,
+      mobile: userAgentData.mobile,
+      platform: userAgentData.platform || ""
+    };
+  }
+}
+
+function getBrowserName(userAgent) {
+  if (/Edg\//.test(userAgent)) return "Edge";
+  if (/SamsungBrowser\//.test(userAgent)) return "Samsung Internet";
+  if (/CriOS\//.test(userAgent)) return "Chrome iOS";
+  if (/FxiOS\//.test(userAgent)) return "Firefox iOS";
+  if (/Chrome\//.test(userAgent)) return "Chrome";
+  if (/Safari\//.test(userAgent)) return "Safari";
+  if (/Firefox\//.test(userAgent)) return "Firefox";
+  return "Outro";
+}
+
+function getSystemName(userAgent) {
+  if (/Android/.test(userAgent)) return "Android";
+  if (/iPhone|iPad|iPod/.test(userAgent)) return "iOS";
+  if (/Windows/.test(userAgent)) return "Windows";
+  if (/Mac OS X/.test(userAgent)) return "macOS";
+  if (/Linux/.test(userAgent)) return "Linux";
+  return "Outro";
 }
 
 function hashFingerprint(value) {

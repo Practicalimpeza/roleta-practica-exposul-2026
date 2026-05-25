@@ -1,6 +1,27 @@
 const SHEET_NAME = "participantes";
 const DEFAULT_ROUND = "oficial-1";
-const HEADERS = ["Data", "Rodada", "Nome", "Nome normalizado", "Dispositivo", "Prêmio", "Código", "Status"];
+const BLOCK_REPEATED_DEVICE = false;
+const HEADERS = [
+  "Data",
+  "Rodada",
+  "Nome",
+  "Nome normalizado",
+  "Dispositivo",
+  "Prêmio",
+  "Código",
+  "Status",
+  "Navegador",
+  "Sistema",
+  "Tela",
+  "Viewport",
+  "Idioma",
+  "Fuso",
+  "CPU",
+  "Memória",
+  "Toques",
+  "Conexão",
+  "Dados completos"
+];
 const PRIZES = [
   "Kit Práctica",
   "Caneca térmica",
@@ -18,14 +39,15 @@ function doGet(event) {
   const name = String(params.name || "").trim();
   const round = sanitizeRound_(params.round || DEFAULT_ROUND);
   const device = sanitizeDevice_(params.device);
-  const result = spinForName_(name, round, device);
+  const deviceInfo = parseDeviceInfo_(params.deviceInfo);
+  const result = spinForName_(name, round, device, deviceInfo);
 
   return ContentService
     .createTextOutput(`${callback}(${JSON.stringify(result)});`)
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
-function spinForName_(name, round, device) {
+function spinForName_(name, round, device, deviceInfo) {
   if (!name) {
     return { ok: false, error: "name_required" };
   }
@@ -37,6 +59,7 @@ function spinForName_(name, round, device) {
     const sheet = getSheet_();
     const normalizedName = normalizeName_(name);
     const values = sheet.getDataRange().getValues();
+    let possibleDeviceRepeat = false;
 
     for (let row = 1; row < values.length; row += 1) {
       const rowRound = String(values[row][1] || DEFAULT_ROUND);
@@ -52,13 +75,27 @@ function spinForName_(name, round, device) {
       }
 
       if (device && rowDevice && rowDevice === device) {
-        return buildExistingResult_(values[row], "device");
+        if (BLOCK_REPEATED_DEVICE) {
+          return buildExistingResult_(values[row], "device");
+        }
+
+        possibleDeviceRepeat = true;
       }
     }
 
     const prize = PRIZES[Math.floor(Math.random() * PRIZES.length)];
     const code = Utilities.getUuid().slice(0, 8).toUpperCase();
-    sheet.appendRow([new Date(), round, name, normalizedName, device, prize, code, "completed"]);
+    const status = possibleDeviceRepeat ? "possible_device_repeat" : "completed";
+    sheet.appendRow([
+      new Date(),
+      round,
+      name,
+      normalizedName,
+      device,
+      prize,
+      code,
+      status
+    ].concat(buildDeviceInfoColumns_(deviceInfo)));
 
     return { ok: true, already: false, name, prize, code };
   } catch (error) {
@@ -118,6 +155,37 @@ function normalizeName_(name) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
+}
+
+function parseDeviceInfo_(rawValue) {
+  try {
+    const parsed = JSON.parse(String(rawValue || "{}"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function buildDeviceInfoColumns_(deviceInfo) {
+  return [
+    safeText_(deviceInfo.browser, 80),
+    safeText_(deviceInfo.system || deviceInfo.uaPlatform, 80),
+    safeText_(deviceInfo.screen, 80),
+    safeText_(deviceInfo.viewport, 80),
+    safeText_(deviceInfo.language || deviceInfo.languages, 160),
+    safeText_(`${deviceInfo.timezone || ""} (${deviceInfo.timezoneOffset || 0})`, 160),
+    safeText_(deviceInfo.hardwareConcurrency, 40),
+    safeText_(deviceInfo.deviceMemory, 40),
+    safeText_(deviceInfo.maxTouchPoints, 40),
+    safeText_(deviceInfo.connection, 120),
+    safeText_(JSON.stringify(deviceInfo), 1500)
+  ];
+}
+
+function safeText_(value, maxLength) {
+  return String(value === undefined || value === null ? "" : value)
+    .replace(/[\r\n\t]/g, " ")
+    .slice(0, maxLength);
 }
 
 function sanitizeRound_(round) {
