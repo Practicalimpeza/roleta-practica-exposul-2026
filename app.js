@@ -293,7 +293,7 @@ function showResult(name, prize, options = {}) {
   resultCode.textContent = currentCode ? `Código de conferência: ${currentCode}` : "";
   resultNote.textContent = options.already
     ? "Este nome já tinha um resultado registrado. Mostre esta tela para a equipe."
-    : "Mostre esta tela ou envie a mensagem para retirar seu prêmio.";
+    : "Mostre esta tela ou envie a mensagem para retirar seu prêmio no jantar do estande da Manfredi Imóveis.";
   winnerBox.classList.add("is-hot");
   whatsappButton.disabled = false;
   showScreen("result");
@@ -357,7 +357,7 @@ function sendWhatsAppMessage(event) {
   }
 
   const codeMessage = currentCode ? ` Código de conferência: ${currentCode}.` : "";
-  const message = `Olá! Meu nome é ${currentParticipantName} e ganhei o prêmio ${currentPrize} na Roleta Práctica do jantar da EXPOSUL 2026.${codeMessage}`;
+  const message = `Olá! Meu nome é ${currentParticipantName} e ganhei o prêmio ${currentPrize} na Roleta Práctica do jantar do estande da Manfredi Imóveis na EXPOSUL 2026.${codeMessage}`;
   const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
   window.open(url, "_blank", "noopener");
