@@ -143,6 +143,7 @@ function closeNameSheetPanel() {
 
 function beginParticipation(event) {
   event.preventDefault();
+  guestName.setCustomValidity("");
 
   const savedResult = getSavedResult();
 
@@ -159,12 +160,15 @@ function beginParticipation(event) {
     return;
   }
 
-  guestName.setCustomValidity("");
   currentParticipantName = name;
   playerName.textContent = `Boa sorte, ${firstName(name)}!`;
   setClaimHint(getRegistrationHint(), isBackendConfigured() || isLocalDemo() ? "success" : "warning");
   closeNameSheetPanel();
   window.setTimeout(() => startRegisteredSpin(name), 180);
+}
+
+function clearNameValidationError() {
+  guestName.setCustomValidity("");
 }
 
 function spinWheel(event) {
@@ -896,6 +900,7 @@ drawWheel();
 restoreSavedResult();
 
 nameForm.addEventListener("submit", beginParticipation);
+guestName.addEventListener("input", clearNameValidationError);
 spinButton.addEventListener("click", spinWheel);
 spinButton.addEventListener("pointerdown", startPlayfulWheelDrag);
 spinButton.addEventListener("pointermove", movePlayfulWheelDrag);
