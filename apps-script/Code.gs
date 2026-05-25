@@ -1,5 +1,5 @@
 const SHEET_NAME = "participantes";
-const DEFAULT_ROUND = "oficial-1";
+const DEFAULT_ROUND = "teste-2";
 const BLOCK_REPEATED_DEVICE = false;
 const HEADERS = [
   "Data",
