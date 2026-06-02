@@ -1,5 +1,5 @@
 const SHEET_NAME = "participantes";
-const DEFAULT_ROUND = "teste-2";
+const DEFAULT_ROUND = "teste-3";
 const BLOCK_REPEATED_DEVICE = false;
 const EVENT_TIMEZONE = "America/Campo_Grande";
 const NIGHT_RESET_HOUR = 6;

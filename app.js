@@ -36,7 +36,7 @@ const root = document.documentElement;
 
 const backendUrl = window.PRACTICA_BACKEND_URL || "";
 const whatsappNumber = "556784132037";
-const participationRound = "teste-2";
+const participationRound = "teste-3";
 const resultStorageKey = `practica-roleta-exposul-2026-result-${participationRound}`;
 const confettiColors = ["#51c2bd", "#f8c84b", "#ff755f", "#9bd84b", "#489de2", "#27323f"];
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
