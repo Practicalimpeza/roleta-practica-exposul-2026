@@ -1,6 +1,6 @@
 # Roleta Práctica - EXPOSUL 2026
 
-Site estático mobile-first para a roleta de prêmios da Práctica no jantar da EXPOSUL 2026, em Chapadão do Sul.
+Site estático mobile-first para a roleta de prêmios da Práctica na EXPOSUL 2026, em Chapadão do Sul.
 
 ## Fluxo
 
