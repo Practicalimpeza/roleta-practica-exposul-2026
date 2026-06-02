@@ -6,7 +6,7 @@ const prizes = [
   { label: "50% OFF edredom", prize: "Desconto de 50% na lavagem de edredom", color: "#9bd84b", text: "#1f3314" },
   { label: "30% OFF tapete", prize: "Desconto de 30% na lavagem de tapete", color: "#489de2", text: "#ffffff" },
   { label: "Tenso 1L", prize: "Tenso 1L", color: "#27323f", text: "#ffffff" },
-  { label: "Desincr. 1L", prize: "Desincrustante Porcelanato 1L", color: "#eaf3ef", text: "#27323f" }
+  { label: "Desincr. Porcel. 1L", prize: "Desincrustante Porcelanato 1L", color: "#eaf3ef", text: "#27323f" }
 ];
 
 const screens = {
