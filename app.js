@@ -1,12 +1,12 @@
 const prizes = [
-  { label: "Kit Práctica", color: "#51c2bd", text: "#0d3f43" },
-  { label: "Caneca térmica", color: "#f8c84b", text: "#2d2610" },
-  { label: "Boné Práctica", color: "#12737a", text: "#ffffff" },
-  { label: "Brinde surpresa", color: "#ff755f", text: "#39140d" },
-  { label: "Vale-compras", color: "#9bd84b", text: "#1f3314" },
-  { label: "Produto especial", color: "#489de2", text: "#ffffff" },
-  { label: "Eco bag", color: "#27323f", text: "#ffffff" },
-  { label: "Chaveiro Práctica", color: "#eaf3ef", text: "#27323f" }
+  { label: "Deseng. Cozinha", prize: "Desengordurante de Cozinha", color: "#51c2bd", text: "#0d3f43" },
+  { label: "15% OFF compra", prize: "Desconto de 15% na próxima compra", color: "#f8c84b", text: "#2d2610" },
+  { label: "Lavagem camisa", prize: "Lavagem de uma camisa", color: "#12737a", text: "#ffffff" },
+  { label: "Lavagem jeans", prize: "Lavagem de uma calça jeans", color: "#ff755f", text: "#39140d" },
+  { label: "50% OFF edredom", prize: "Desconto de 50% na lavagem de edredom", color: "#9bd84b", text: "#1f3314" },
+  { label: "30% OFF tapete", prize: "Desconto de 30% na lavagem de tapete", color: "#489de2", text: "#ffffff" },
+  { label: "Tenso 1L", prize: "Tenso 1L", color: "#27323f", text: "#ffffff" },
+  { label: "Desincr. 1L", prize: "Desincrustante Porcelanato 1L", color: "#eaf3ef", text: "#27323f" }
 ];
 
 const screens = {
@@ -80,8 +80,8 @@ function drawWheel() {
     context.rotate(shouldFlip ? labelAngle + Math.PI : labelAngle);
     context.textAlign = shouldFlip ? "left" : "right";
     context.fillStyle = prize.text;
-    context.font = "900 30px Segoe UI, Arial, sans-serif";
-    wrapCanvasText(prize.label, shouldFlip ? -radius + 48 : radius - 48, 10, 180, 34);
+    context.font = "900 27px Segoe UI, Arial, sans-serif";
+    wrapCanvasText(prize.label.toUpperCase(), shouldFlip ? -radius + 44 : radius - 44, 10, 198, 29);
     context.restore();
   });
 
@@ -311,7 +311,10 @@ function pickPrizeIndex() {
 
 function findPrizeIndex(prizeLabel) {
   const normalizedPrize = normalizeText(prizeLabel);
-  const index = prizes.findIndex((prize) => normalizeText(prize.label) === normalizedPrize);
+  const index = prizes.findIndex((prize) => (
+    normalizeText(prize.prize || prize.label) === normalizedPrize
+    || normalizeText(prize.label) === normalizedPrize
+  ));
   return index >= 0 ? index : pickPrizeIndex();
 }
 
@@ -376,7 +379,7 @@ async function requestSpinResult(name) {
       ok: true,
       already: false,
       name,
-      prize: prizes[pickPrizeIndex()].label,
+      prize: prizes[pickPrizeIndex()].prize,
       code: "TESTE"
     });
   }

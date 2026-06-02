@@ -1,6 +1,8 @@
 const SHEET_NAME = "participantes";
 const DEFAULT_ROUND = "teste-2";
 const BLOCK_REPEATED_DEVICE = false;
+const EVENT_TIMEZONE = "America/Campo_Grande";
+const NIGHT_RESET_HOUR = 6;
 const HEADERS = [
   "Data",
   "Rodada",
@@ -23,15 +25,20 @@ const HEADERS = [
   "Dados completos"
 ];
 const PRIZES = [
-  "Kit Práctica",
-  "Caneca térmica",
-  "Boné Práctica",
-  "Brinde surpresa",
-  "Vale-compras",
-  "Produto especial",
-  "Eco bag",
-  "Chaveiro Práctica"
+  "Desengordurante de Cozinha",
+  "Desconto de 15% na próxima compra",
+  "Lavagem de uma camisa",
+  "Lavagem de uma calça jeans",
+  "Desconto de 50% na lavagem de edredom",
+  "Desconto de 30% na lavagem de tapete",
+  "Tenso 1L",
+  "Desincrustante Porcelanato 1L"
 ];
+const PRIZE_LIMITS_PER_NIGHT = {
+  "Desengordurante de Cozinha": 3,
+  "Tenso 1L": 2,
+  "Desincrustante Porcelanato 1L": 2
+};
 
 function doGet(event) {
   const params = event && event.parameter ? event.parameter : {};
@@ -83,11 +90,12 @@ function spinForName_(name, round, device, deviceInfo) {
       }
     }
 
-    const prize = PRIZES[Math.floor(Math.random() * PRIZES.length)];
+    const now = new Date();
+    const prize = pickPrizeForNight_(values, round, now);
     const code = Utilities.getUuid().slice(0, 8).toUpperCase();
     const status = possibleDeviceRepeat ? "possible_device_repeat" : "completed";
     sheet.appendRow([
-      new Date(),
+      now,
       round,
       name,
       normalizedName,
@@ -103,6 +111,59 @@ function spinForName_(name, round, device, deviceInfo) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function pickPrizeForNight_(values, round, now) {
+  const nightKey = getNightKey_(now);
+  const counts = countLimitedPrizesForNight_(values, round, nightKey);
+  const availablePrizes = PRIZES.filter(function(prize) {
+    return isPrizeAvailableForNight_(prize, counts);
+  });
+
+  return availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+}
+
+function countLimitedPrizesForNight_(values, round, nightKey) {
+  const counts = {};
+  Object.keys(PRIZE_LIMITS_PER_NIGHT).forEach(function(prize) {
+    counts[prize] = 0;
+  });
+
+  for (let row = 1; row < values.length; row += 1) {
+    const rowRound = String(values[row][1] || DEFAULT_ROUND);
+    const rowPrize = String(values[row][5] || "");
+
+    if (rowRound !== round || !(rowPrize in PRIZE_LIMITS_PER_NIGHT)) {
+      continue;
+    }
+
+    if (getNightKey_(values[row][0]) === nightKey) {
+      counts[rowPrize] += 1;
+    }
+  }
+
+  return counts;
+}
+
+function isPrizeAvailableForNight_(prize, counts) {
+  const limit = PRIZE_LIMITS_PER_NIGHT[prize];
+
+  if (!limit) {
+    return true;
+  }
+
+  return (counts[prize] || 0) < limit;
+}
+
+function getNightKey_(dateValue) {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const adjustedDate = new Date(date.getTime() - NIGHT_RESET_HOUR * 60 * 60 * 1000);
+  return Utilities.formatDate(adjustedDate, EVENT_TIMEZONE, "yyyy-MM-dd");
 }
 
 function buildExistingResult_(row, reason) {
